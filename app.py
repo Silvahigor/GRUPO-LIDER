@@ -1,5 +1,8 @@
-from flask import Flask, request, jsonify
-import requests
+from flask import Flask, request, jsonify # type: ignore
+
+import requests # type: ignore
+
+import os
 
 app = Flask(__name__)
 
@@ -41,6 +44,8 @@ def buscar_variacoes():
 
     return jsonify({"pai": pai, "variacoes": variacoes})
 
+
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+
