@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Buscar Variações - Mercado Livre</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 p-6">
+  <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6">
+    <h1 class="text-xl font-bold mb-4">Buscar Variações - Mercado Livre</h1>
+
+    <label class="block mb-2">Escolha a empresa:</label>
+    <select id="empresa" class="border p-2 w-full rounded mb-4" onchange="trocarEmpresa()">
+      <option value="SHOPPARTNER">SHOPPARTNER</option>
+      <option value="MAQLIDER">MAQLIDER</option>
+    </select>
+
+    <label class="block mb-2">Token de acesso:</label>
+    <input id="token" class="border p-2 w-full rounded mb-4" placeholder="Cole o token da empresa aqui" />
+
+    <label class="block mb-2">ID do anúncio (número ou MLB...):</label>
+    <input id="ad_id" class="border p-2 w-full rounded mb-4" placeholder="Ex: 1234567890 ou MLB1234567890" />
+
+    <button onclick="buscar()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Buscar Variações</button>
+
+    <pre id="resultado" class="bg-gray-100 mt-4 p-4 rounded text-sm overflow-x-auto h-64"></pre>
+
+    <p class="text-xs text-gray-500 mt-6 text-right">Desenvolvido por Higor Silva</p>
+  </div>
+
+  <script>
+    const tokens = {
+      "SHOPPARTNER": "",
+      "MAQLIDER": ""
+    };
+
+    function trocarEmpresa() {
+      const empresa = document.getElementById("empresa").value;
+      document.getElementById("token").value = tokens[empresa] || "";
+    }
+
+    async function buscar() {
+      const empresa = document.getElementById("empresa").value;
+      const ad_id = document.getElementById("ad_id").value.trim();
+      const token = document.getElementById("token").value.trim();
+      const resultado = document.getElementById("resultado");
+
+      tokens[empresa] = token; // Atualiza o cache local
+
+      if (!ad_id || !token) {
+        alert("Preencha o ID do anúncio e o token.");
+        return;
+      }
+
+      resultado.textContent = "Buscando...";
+
+      try {
+        const res = await fetch("/buscar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ empresa, ad_id, token })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          resultado.textContent = `❌ Erro ${data.status}:
+${data.body}`;
+          return;
+        }
+
+        let texto = `🟦 ID PAI: ${data.pai.id} - ${data.pai.title}
+`;
+        if (data.variacoes.length) {
+          data.variacoes.forEach(v => {
+            texto += `   └ VARIAÇÃO → ID: ${v.id} / SKU: ${v.sku}
+`;
+          });
+        } else {
+          texto += "   (Sem variações encontradas)
+";
+        }
+        resultado.textContent = texto;
+
+      } catch (err) {
+        resultado.textContent = "Erro ao buscar: " + err.message;
+      }
+    }
+
+    window.onload = trocarEmpresa;
+  </script>
+</body>
+</html>
